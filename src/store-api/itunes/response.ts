@@ -9,4 +9,7 @@ export interface iTunesSearchResult {
   bundleId: string;
   version: string;
   price: number;
+  formattedPrice: string;
+  description: string;
+  trackViewUrl: string;
 }

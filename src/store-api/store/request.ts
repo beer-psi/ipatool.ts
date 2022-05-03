@@ -4,7 +4,7 @@ import getMAC from 'getmac';
 import fetchCookie from 'fetch-cookie';
 import nodeFetch from 'node-fetch';
 import { StoreEndpoint } from './endpoint.js';
-import { StoreFailureResponse, StoreAuthResponse, StoreDownloadResponse } from './response.js';
+import { StoreFailureResponse, StoreAuthResponse, StoreDownloadResponse, StoreErrors } from './response.js';
 
 const fetch = fetchCookie(nodeFetch);
 
@@ -42,9 +42,14 @@ export class StoreRequest {
       },
     );
     const parsedResp = parse(await resp.text());
-    if (<StoreFailureResponse>parsedResp.failureType) {
+    if ((<StoreFailureResponse>parsedResp).failureType) {
       return Object.assign(parsedResp, {
         _state: 'failure',
+      });
+    } else if ((<StoreFailureResponse>parsedResp).customerMessage === 'MZFinance.BadLogin.Configurator_message') {
+      return Object.assign(parsedResp, {
+        _state: 'failure',
+        failureType: StoreErrors.CODE_REQURIED,
       });
     }
     return Object.assign(parsedResp, {
@@ -75,7 +80,7 @@ export class StoreRequest {
       },
     );
     const parsedResp = parse(await resp.text());
-    if (<StoreFailureResponse>parsedResp.failureType) {
+    if ((<StoreFailureResponse>parsedResp).failureType) {
       return Object.assign(parsedResp, {
         _state: 'failure',
       });

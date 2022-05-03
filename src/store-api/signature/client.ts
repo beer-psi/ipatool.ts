@@ -73,17 +73,18 @@ export class SignatureClient {
   }
 
   public async write(): Promise<SignatureClient> {
-    this.archive.generateNodeStream({
-      streamFiles: true,
-      compression: 'DEFLATE',
-      compressionOptions: {
-        level: 9,
-      },
-    })
-      .pipe(createWriteStream(this.filename))
-      .on('finish', () => {
-        console.log('ok');
-      });
-    return this;
+    return new Promise((resolve) => {
+      this.archive.generateNodeStream({
+        streamFiles: true,
+        compression: 'DEFLATE',
+        compressionOptions: {
+          level: 9,
+        },
+      })
+        .pipe(createWriteStream(this.filename))
+        .on('finish', () => {
+          resolve(this);
+        });
+    });
   }
 }

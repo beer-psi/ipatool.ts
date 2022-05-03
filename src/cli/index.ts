@@ -1,0 +1,165 @@
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
+import { Storefront } from '../store-api/common/storefront.js';
+import { DeviceFamily } from '../store-api/common/device-family.js';
+import search from './search.js';
+import download from './download.js';
+
+yargs(hideBin(process.argv))
+  .command(
+    'download',
+    'Download encrypted iOS app packages from the App Store.',
+    (argv) => {
+      argv
+        .option('b', {
+          alias: ['bundle-identifier', 'bundle-id'],
+          description: 'The app to download\'s bundle ID',
+          conflicts: ['i'],
+          type: 'string',  
+          nargs: 1, 
+        })
+        .option('i', {
+          alias: ['track-identifier', 'track-id'],
+          description: 'The app to download\'s track ID',
+          conflicts: ['b'],
+          type: 'string',
+          nargs: 1,
+        })
+        .option('e', {
+          alias: ['email'],
+          description: 'Apple ID email address',
+          demandOption: process.env.IPATOOL_EMAIL === undefined,
+          type: 'string',
+          nargs: 1,
+          default: '',
+          coerce: (arg) => {
+            if (!arg && process.env.IPATOOL_EMAIL) {
+              return process.env.IPATOOL_EMAIL;
+            } else { 
+              return arg;
+            }
+          },
+        })
+        .option('p', {
+          alias: ['password'],
+          description: 'Apple ID password',
+          demandOption: process.env.IPATOOL_PASSWORD === undefined,
+          type: 'string',
+          nargs: 1,
+          default: '',
+          coerce: (arg) => {
+            if (!arg && process.env.IPATOOL_PASSWORD) {
+              return process.env.IPATOOL_PASSWORD;
+            } else { 
+              return arg;
+            }
+          },
+        })
+        .option('m', {
+          alias: ['2fa-code', 'mfa-code', 'auth-code'],
+          description: 'Apple ID 2FA code',
+          type: 'string',
+          nargs: 1,
+          default: '',
+          coerce: (arg) => {
+            if (!arg && process.env.IPATOOL_2FA_CODE) {
+              return process.env.IPATOOL_2FA_CODE;
+            } else { 
+              return arg;
+            }
+          },
+        })
+        .option('d', {
+          alias: ['device-family'],
+          description: 'The device family to limit the search query to.',
+          choices: ['iPhone', 'iPad'],
+          coerce: (arg) => {
+            switch (arg) {
+              case 'iPhone': 
+                return DeviceFamily.PHONE;
+              case 'iPad':
+                return DeviceFamily.PAD;
+            }
+          },
+          default: DeviceFamily.PHONE,
+          nargs: 1,
+        })
+        .option('c', {
+          alias: ['country'],
+          description: 'The two-letter (ISO 3166-1 alpha-2) country code for the iTunes Store.',
+          choices: Object.keys(Storefront), 
+          default: 'US',
+          nargs: 1,
+        })
+        .option('o', {
+          alias: ['output'],
+          description: 'Where to save the downloaded IPA',
+          nargs: 1,
+          normalize: true,
+        })
+        .option('purchase', {
+          description: 'Obtain a license for the app if needed.',
+          boolean: true,
+        })
+        .check(({ b, i }) => {
+          if (b && i) {
+            throw new Error('Error: only bundle ID or track ID should be required.');
+          } else if (!b && !i) {
+            throw new Error('Error: needs to specify either bundle ID or track ID.');
+          }
+          return true;
+        });
+    },
+    (args: any) => {
+      console.log(args);
+      download(args);
+    },
+  )
+  .command(
+    'search',
+    'Searches for iOS apps on the App Store',
+    (argv) => {
+      argv
+        .positional('term', {
+          description: 'The term to search for',
+          demandOption: true,
+        })
+        .option('l', {
+          alias: ['limit'],
+          description: 'The maximum number of search results to retrieve.',
+          type: 'number',
+          default: 5,
+          nargs: 1,
+        })
+        .option('d', {
+          alias: ['device-family'],
+          description: 'The device family to limit the search query to.',
+          choices: ['iPhone', 'iPad'],
+          coerce: (arg: DeviceFamily) => {
+            switch (arg) {
+              case 'iPhone': 
+                return DeviceFamily.PHONE;
+              case 'iPad':
+                return DeviceFamily.PAD;
+            }
+          },
+          default: DeviceFamily.PHONE,
+          nargs: 1,
+        })
+        .option('c', {
+          alias: ['country'],
+          description: 'The two-letter (ISO 3166-1 alpha-2) country code for the iTunes Store.',
+          choices: Object.keys(Storefront), 
+          default: 'US',
+          nargs: 1,
+        });
+    },
+    (args: any) => {
+      return search(Object.assign(args, {
+        term: args._.at(-1),
+      }));
+    },
+  )
+  .epilogue('Apple ID information can be passed through flags, or through environment variables IPATOOL_EMAIL, IPATOOL_PASSWORD and IPATOOL_2FA_CODE.')
+  .help()
+  .parse();

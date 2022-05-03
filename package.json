@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "A tool to download IPAs from the iOS App Store",
   "main": "dist/index.js",
+  "type": "module",
   "scripts": {
     "build": "wireit",
     "lint": "wireit"
@@ -45,12 +46,16 @@
     "wireit": "^0.3.1"
   },
   "dependencies": {
+    "chalk": "^5.0.1",
+    "cli-table3": "^0.6.2",
     "fast-plist": "^0.1.2",
     "fetch-cookie": "^2.0.3",
+    "filesize": "^8.0.7",
     "getmac": "^5.20.0",
     "jszip": "^3.9.1",
     "node-fetch": "^3.2.4",
     "plist": "^3.0.5",
+    "terminal-link": "^3.0.0",
     "yargs": "^17.4.1"
   }
 }
