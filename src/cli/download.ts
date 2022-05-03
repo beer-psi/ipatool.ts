@@ -2,6 +2,7 @@ import { createWriteStream } from 'fs';
 import https from 'https';
 import chalk from 'chalk';
 import fileSize from 'filesize';
+import { SingleBar, Presets } from 'cli-progress';
 import { StoreClient } from '../store-api/store/client.js';
 import { SignatureClient } from '../store-api/signature/client.js';
 import { iTunesClient } from '../store-api/itunes/client.js';
@@ -9,7 +10,7 @@ import { Storefront } from '../store-api/common/storefront.js';
 import { DeviceFamily } from '../store-api/common/device-family.js';
 import { StoreErrors } from '../store-api/store/response.js';
 
-async function downloadFile(url: string, output: string, updateCallback: (downloaded: number, fileSize: number) => any): Promise<void> {
+async function downloadFile(url: string, output: string, updateCallback: (downloaded: number, fileSize: number) => any): Promise<number> {
   return new Promise((resolve, reject) => {
     https.get(url, (res) => {
       const writeStream = createWriteStream(output, {
@@ -26,7 +27,7 @@ async function downloadFile(url: string, output: string, updateCallback: (downlo
         })
         .on('end', () => {
           writeStream.end(() => {
-            resolve();
+            resolve(fs);
           });
         })
         .on('error', (err) => {
@@ -34,6 +35,27 @@ async function downloadFile(url: string, output: string, updateCallback: (downlo
         });
     });
   });
+}
+
+async function downloadWithProgress(url: string, output: string): Promise<void> {
+  const bar = new SingleBar({
+    format: 'Downloading: {bar} {percentage}% | {downloaded} of {fs}',
+  }, Presets.shades_classic);
+  bar.start(100, 0, {
+    downloaded: 'N/A',
+    fs: 'N/A',
+  });
+  const fs = await downloadFile(url, output, (downloaded: number, files: number) => {
+    bar.update(Math.round(downloaded / files * 100), {
+      downloaded: fileSize(downloaded),
+      fs: fileSize(files),
+    });
+  });
+  bar.update(100, {
+    downloaded: fileSize(fs),
+    fs: fileSize(fs),
+  });
+  bar.stop();
 }
 
 export default async function downloadApp({ 
@@ -75,11 +97,9 @@ export default async function downloadApp({
         console.log(`Found app ${app.metadata.bundleDisplayName} with version ${app.metadata.bundleShortVersionString}`);
         output ??= `${app.metadata.bundleDisplayName}_${app.metadata.bundleShortVersionString}.ipa`;
         
-        console.log(`Saving app to ${output}...`);
-        await downloadFile(app.URL, output, (downloaded: number, fs: number) => {
-          process.stdout.write(`Downloaded ${Math.round(downloaded / fs * 100)}% (${fileSize(downloaded)} of ${fileSize(fs)})\r`);
-        });
-        console.log('\nSigning IPA');
+        await downloadWithProgress(app.URL, output);
+
+        console.log('Signing IPA');
         const sigClient = new SignatureClient(app, user.accountInfo.appleId);
         await sigClient.loadFile(output);
         await sigClient.appendMetadata().appendSignature();
