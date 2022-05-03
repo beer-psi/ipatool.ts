@@ -20,7 +20,7 @@ export class SignatureClient {
 
   public signature: {
     id: number,
-    sinf: Buffer
+    sinf: string
   };
 
   public email: string;
@@ -68,7 +68,7 @@ export class SignatureClient {
     }
     const appBundleName = manifestPath.split('/')[1].replace(/\.app$/g, '');
     const signatureTargetPath = `Payload/${appBundleName}.app/${manifest.SinfPaths[0]}`;
-    this.archive.file(signatureTargetPath, this.signature.sinf);
+    this.archive.file(signatureTargetPath, Buffer.from(this.signature.sinf, 'base64'));
     return this;
   }
 
