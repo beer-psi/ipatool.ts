@@ -7,6 +7,7 @@ import { SignatureClient } from '../store-api/signature/client.js';
 import { iTunesClient } from '../store-api/itunes/client.js';
 import { Storefront } from '../store-api/common/storefront.js';
 import { DeviceFamily } from '../store-api/common/device-family.js';
+import { StoreErrors } from '../store-api/store/response.js';
 
 async function downloadFile(url: string, output: string, updateCallback: (downloaded: number, fileSize: number) => any): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -44,7 +45,6 @@ export default async function downloadApp({
   deviceFamily, 
   country, 
   output, 
-  _purchase,
 }: {
   email: string,
   password: string
@@ -54,7 +54,6 @@ export default async function downloadApp({
   deviceFamily: DeviceFamily,
   country: keyof typeof Storefront,
   output: string | undefined,
-  _purchase: boolean,
 }) {
   console.log('Logging in with provided information...');
   try {
@@ -70,7 +69,7 @@ export default async function downloadApp({
       trackId = String(lookupRes.trackId);
     }
     if (trackId) {
-      console.log('Querying app with the iTunes Store API...');
+      console.log('Obtaining a signed copy of the app...');
       try {
         const app = await StoreClient.item(trackId, user.dsPersonId);
         console.log(`Found app ${app.metadata.bundleDisplayName} with version ${app.metadata.bundleShortVersionString}`);
@@ -87,10 +86,31 @@ export default async function downloadApp({
         await sigClient.write();
         console.log(chalk.green(`Saved IPA to ${output}`));
       } catch (e: any) {
-        if (e._state === 'failure') {
-          console.log(chalk.red(`Couldn't find app: ${e.customerMessage} (${e.failureType})`));
-        } else {
-          throw e;
+        switch (e.failureType) {
+          case StoreErrors.INVALID_COUNTRY: {
+            console.log(chalk.red('The country provided does not match your account. Use the -c, --country flag to supply a valid one.'));
+            break;
+          }
+          case StoreErrors.PASSWORD_TOKEN_EXPIRED: {
+            console.log(chalk.red('Login session expired. Login again.'));
+            break;
+          }
+          case StoreErrors.INVALID_ITEM: {
+            console.log(chalk.red('Received invalid store item.'));
+            break;
+          }
+          case StoreErrors.INVALID_LICENSE: {
+            console.log(chalk.red('Your Apple ID does not have a license for this app. Use the purchase command to obtain one.'));
+            break;
+          }
+          default: {
+            if (e._state === 'failure') {
+              console.log(chalk.red(`Couldn't find app: ${e.customerMessage} (${e.failureType})`));
+              break;
+            } else {
+              throw e;
+            }
+          }
         }
       }
       
