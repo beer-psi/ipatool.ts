@@ -37,7 +37,7 @@ export class StoreClient {
   }
 
   /**
-   * @deprecated
+   * @todo
    */
   public static async purchase() {
     // TODO

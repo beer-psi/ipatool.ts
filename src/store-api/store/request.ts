@@ -86,7 +86,7 @@ export class StoreRequest {
   }
 
   /**
-   * @deprecated
+   * @todo
    */
   public static async purchase() {
     // TODO
