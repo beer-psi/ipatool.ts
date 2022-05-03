@@ -114,7 +114,6 @@ yargs(hideBin(process.argv))
         });
     },
     (args: any) => {
-      console.log(args);
       download(args);
     },
   )
