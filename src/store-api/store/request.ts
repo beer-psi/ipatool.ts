@@ -3,8 +3,9 @@ import plist from 'plist';
 import getMAC from 'getmac';
 import fetchCookie from 'fetch-cookie';
 import nodeFetch from 'node-fetch';
+import { Storefront } from '../common/storefront.js';
 import { StoreEndpoint } from './endpoint.js';
-import { StoreFailureResponse, StoreAuthResponse, StoreDownloadResponse, StoreErrors } from './response.js';
+import { StoreFailureResponse, StoreAuthResponse, StoreDownloadResponse, StoreErrors, StorePurchaseResponse } from './response.js';
 
 const fetch = fetchCookie(nodeFetch);
 
@@ -74,8 +75,6 @@ export class StoreRequest {
         headers: Object.assign(this.commonHeaders, {
           'X-Dsid': directoryServicesIdentifier,
           'iCloud-DSID': directoryServicesIdentifier,
-          'Accept-Encoding': 'gzip, deflate',
-          'Connection': 'keep-alive',
         }),
       },
     );
@@ -91,9 +90,53 @@ export class StoreRequest {
   }
 
   /**
-   * @todo
+   * @throws if there is already a license.
    */
-  public static async purchase() {
-    // TODO
+  public static async purchase(
+    appIdentifier: string,
+    directoryServicesIdentifier: string,
+    passwordToken: string,
+    countryCode: keyof typeof Storefront,
+  ): Promise<StorePurchaseResponse | StoreFailureResponse> {
+    const body = plist.build({
+      appExtVrsId: '0',
+      hasAskedToFulfillPreorder: 'true',
+      buyWithoutAuthorization: 'true',
+      hasDoneAgeCheck: 'true',
+      needDiv: '0',
+      origPage: `Software-${appIdentifier}`,
+      origPageLocation: 'Buy',
+      price: '0',
+      pricingParameters: 'STDQ',
+      productType: 'C',
+      salableAdamId: appIdentifier,
+      guid: this.guid,
+    });
+    const resp = await fetch(
+      StoreEndpoint.purchase,
+      {
+        method: 'POST',
+        body: body,
+        headers: Object.assign(this.commonHeaders, {
+          'X-Dsid': directoryServicesIdentifier,
+          'iCloud-DSID': directoryServicesIdentifier,
+          'Content-Type': 'application/x-apple-plist',
+          'X-Apple-Store-Front': Storefront[countryCode],
+          'X-Token': passwordToken,
+        }),
+      },
+    );
+    if (resp.status === 500) {
+      throw new Error('The Apple ID already contains a license for this app.');
+    }
+    const parsedResp = parse(await resp.text());
+    if ((<StoreFailureResponse>parsedResp).failureType) {
+      return Object.assign(parsedResp, {
+        _state: 'failure',
+      });
+    }
+    return Object.assign(parsedResp, {
+      _state: 'success',
+    });
   }
 }

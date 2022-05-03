@@ -20,6 +20,11 @@ interface HasDSID {
   dsPersonId: string,
 }
 
+interface Jingle {
+  jingleDocType: string,
+  jingleAction: string,
+}
+
 export interface StoreAuthResponse extends StoreResponse, HasDSID {
   _state: 'success',
   accountInfo: Account,
@@ -32,11 +37,13 @@ export interface StoreFailureResponse extends StoreResponse, Error {
   customerMessage: string
 }
 
-export interface StoreDownloadResponse extends StoreResponse, HasDSID {
+export interface StoreDownloadResponse extends StoreResponse, HasDSID, Jingle {
   _state: 'success'
-  jingleDocType: string,
-  jingleAction: string,
   songList: StoreItem[],
+}
+
+export interface StorePurchaseResponse extends StoreResponse, HasDSID, Jingle {
+  _state: 'success'
 }
 
 export interface StoreItem {
@@ -44,7 +51,7 @@ export interface StoreItem {
   md5: string,
   sinfs: {
     id: number,
-    sinf: Buffer
+    sinf: string,
   }[],
   metadata: {
     bundleDisplayName: string,

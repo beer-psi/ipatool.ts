@@ -1,5 +1,6 @@
+import { Storefront } from '../common/storefront.js';
 import { StoreRequest } from './request.js';
-import { StoreAuthResponse, StoreErrors, StoreItem } from './response.js';
+import { StoreAuthResponse, StoreErrors, StoreItem, StorePurchaseResponse } from './response.js';
 
 export class StoreClient {
   /**
@@ -37,13 +38,6 @@ export class StoreClient {
   }
 
   /**
-   * @todo
-   */
-  public static async purchase() {
-    // TODO
-  }
-
-  /**
    * Signs a user into iTunes, with optional retrying
    * @param email Apple ID email
    * @param password Apple ID password
@@ -65,6 +59,20 @@ export class StoreClient {
       } else {
         throw resp;
       }
+    } else {
+      return resp;
+    }
+  }
+
+  public static async purchase(
+    appIdentifier: string,
+    directoryServicesIdentifier: string,
+    passwordToken: string,
+    countryCode: keyof typeof Storefront,
+  ): Promise<StorePurchaseResponse> {
+    const resp = await StoreRequest.purchase(appIdentifier, directoryServicesIdentifier, passwordToken, countryCode);
+    if (resp._state === 'failure') {
+      throw resp;
     } else {
       return resp;
     }
