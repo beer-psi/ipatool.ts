@@ -2,7 +2,10 @@
   "name": "ipatool.ts",
   "version": "0.1.0",
   "description": "A tool to download IPAs from the iOS App Store",
-  "main": "dist/index.js",
+  "main": "lib/cli/index.js",
+  "bin": {
+    "ipatool": "lib/cli/index.js"
+  },
   "type": "module",
   "scripts": {
     "build": "wireit",
@@ -36,7 +39,6 @@
   "author": "beerpsi",
   "license": "0BSD",
   "devDependencies": {
-    "@types/adm-zip": "^0.5.0",
     "@types/plist": "^3.0.2",
     "@types/yargs": "^17.0.10",
     "eslint": "^8.14.0",

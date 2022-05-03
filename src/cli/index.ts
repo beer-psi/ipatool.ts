@@ -87,7 +87,7 @@ yargs(hideBin(process.argv))
         .option('c', {
           alias: ['country'],
           description: 'The two-letter (ISO 3166-1 alpha-2) country code for the iTunes Store.',
-          choices: Object.keys(Storefront), 
+          coerce: (arg) => arg.toUpperCase(),
           default: 'US',
           nargs: 1,
         })
@@ -101,11 +101,14 @@ yargs(hideBin(process.argv))
           description: 'Obtain a license for the app if needed.',
           boolean: true,
         })
-        .check(({ b, i }) => {
+        .check(({ b, i, c }) => {
           if (b && i) {
-            throw new Error('Error: only bundle ID or track ID should be required.');
+            throw new Error('Only bundle ID or track ID should be given.');
           } else if (!b && !i) {
-            throw new Error('Error: needs to specify either bundle ID or track ID.');
+            throw new Error('Needs to specify either bundle ID or track ID.');
+          }
+          if (!Object.keys(Storefront).includes(c)) {
+            throw new Error('Invalid storefront country code given.');
           }
           return true;
         });
@@ -149,9 +152,15 @@ yargs(hideBin(process.argv))
         .option('c', {
           alias: ['country'],
           description: 'The two-letter (ISO 3166-1 alpha-2) country code for the iTunes Store.',
-          choices: Object.keys(Storefront), 
           default: 'US',
           nargs: 1,
+          coerce: arg => arg.toUpperCase(),
+        })
+        .check(({ c }) => {
+          if (!Object.keys(Storefront).includes(c)) {
+            throw new Error('Invalid storefront country code given.');
+          }
+          return true;
         });
     },
     (args: any) => {
@@ -161,5 +170,7 @@ yargs(hideBin(process.argv))
     },
   )
   .epilogue('Apple ID information can be passed through flags, or through environment variables IPATOOL_EMAIL, IPATOOL_PASSWORD and IPATOOL_2FA_CODE.')
+  .demandCommand()
+  .version('0.1.0')
   .help()
   .parse();
