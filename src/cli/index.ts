@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { Storefront } from '../store-api/common/storefront.js';
