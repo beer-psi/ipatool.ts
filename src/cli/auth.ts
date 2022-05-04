@@ -1,4 +1,4 @@
-import keytar from 'keytar';
+import { setPassword, deletePassword } from 'keytar';
 import { StoreClient } from '../store-api/store/client.js';
 import { StoreAuthResponse, StoreFailureResponse } from '../store-api/store/response.js';
 import { Logger } from './logger.js';
@@ -27,20 +27,20 @@ export async function login({ email, password, mfaCode, logLevel }: {
   }
   logger.info(`Logged in as ${user.accountInfo.address.firstName} ${user.accountInfo.address.lastName}`);
   const userinfo = {
-    name: `${user.accountInfo.address.firstName} ${user.accountInfo.address.lastName}`,
-    email: email,
-    passwordToken: user.passwordToken,
-    directoryServicesIdentifier: user.dsPersonId,
-    cookies: StoreClient.storeReq.cookieJar.getSetCookieStringsSync('https://apple.com', { allPaths: true }),
+    n: `${user.accountInfo.address.firstName} ${user.accountInfo.address.lastName}`,
+    e: email,
+    p: user.passwordToken,
+    d: user.dsPersonId,
+    c: StoreClient.storeReq.cookieJar.getSetCookieStringsSync('https://apple.com', { allPaths: true }),
   };
   logger.debug(JSON.stringify(userinfo));
-  await keytar.setPassword('ipatool.ts.service', 'account', JSON.stringify(userinfo));
+  await setPassword('ipatool.ts.service', 'account', JSON.stringify(userinfo));
   logger.info('Saved authentication info to your system\'s keychain.');
 }
 
 export async function revoke({ logLevel }: { logLevel: string }) {
   const logger = new Logger(logLevel);
-  const res = await keytar.deletePassword('ipatool.ts.service', 'account');
+  const res = await deletePassword('ipatool.ts.service', 'account');
   if (res)
     logger.info('Revoked authentication.');
   else

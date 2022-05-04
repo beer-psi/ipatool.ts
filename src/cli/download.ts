@@ -1,5 +1,5 @@
 import { createWriteStream } from 'fs';
-import https from 'https';
+import { get } from 'https';
 import chalk from 'chalk';
 import fileSize from 'filesize';
 import { getPassword } from 'keytar';
@@ -13,16 +13,35 @@ import { StoreErrors, StoreItem } from '../store-api/store/response.js';
 import { Logger } from './logger.js';
 
 interface Account {
-  name: string;
-  email: string;
-  passwordToken: string;
-  directoryServicesIdentifier: string;
-  cookies: string[];
+  /**
+   * The name assigned with this Apple ID.
+   */
+  n: string;
+
+  /**
+   * The email associated with this Apple ID.
+   */
+  e: string;
+
+  /**
+   * The password token of this ID.
+   */
+  p: string;
+
+  /**
+   * Directory Services Identifier
+   */
+  d: string;
+
+  /**
+   * An array of Set-Cookie strings
+   */
+  c: string[];
 }
 
 async function downloadFile(url: string, output: string, updateCallback: (downloaded: number, fileSize: number) => any): Promise<number> {
   return new Promise((resolve, reject) => {
-    https.get(url, (res) => {
+    get(url, (res) => {
       const writeStream = createWriteStream(output, {
         flags: 'w',
       });
@@ -77,7 +96,7 @@ async function login(): Promise<Account | null> {
 }
 
 async function sign(app: StoreItem, user: Account, file: string) {
-  const sigClient = new SignatureClient(app, user.email);
+  const sigClient = new SignatureClient(app, user.e);
   await sigClient.loadFile(file);
   await sigClient.appendMetadata().appendSignature();
   await sigClient.write();
@@ -117,11 +136,11 @@ export default async function run({
   }
 
   logger.debug('Setting authentication cookies...');
-  user.cookies.map((cookie: string) => {
+  user.c.map((cookie: string) => {
     StoreClient.storeReq.cookieJar.setCookieSync(cookie, 'https://apple.com');
   });
-  
-  logger.info(`Logged in as ${user.name}`);
+
+  logger.info(`Logged in as ${user.n}`);
 
   const identifier = await getTrackId(country, deviceFamily, bundleId, trackId);
   logger.debug(`Track ID: ${identifier}`);
@@ -132,7 +151,7 @@ export default async function run({
 
   try {
     logger.info('Obtaining a signed copy of the app...');
-    const app = await StoreClient.item(String(identifier), user.directoryServicesIdentifier);
+    const app = await StoreClient.item(String(identifier), user.d);
     logger.info(`Found app ${app.metadata.bundleDisplayName} with version ${app.metadata.bundleShortVersionString}`);
     output ??= `${app.metadata.bundleDisplayName}_${app.metadata.bundleShortVersionString}.ipa`;
     
