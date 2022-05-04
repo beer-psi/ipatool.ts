@@ -147,3 +147,4 @@ dist
 lib/
 .wireit/
 *.ipa
+bin/

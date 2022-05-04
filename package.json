@@ -50,7 +50,7 @@
       "dependencies": [
         "build:bundle"
       ],
-      "command": "caxa -i . --exclude \"*\" \".*\" \"!dist\" \"!package.json\" \"!package-lock.json\" -p \"npm ci --production\" -m \"This may take a while to run the first time, please wait...\" -o bin/ipatool.exe -- \"{{caxa}}/node_modules/.bin/node\" \"{{caxa}}/dist/index.js\"",
+      "command": "caxa -i . --exclude \"*\" \".*\" \"!dist\" \"!package.json\" \"!package-lock.json\" -p \"npm i --production\" -m \"This may take a while to run the first time, please wait...\" -o bin/ipatool.exe -- \"{{caxa}}/node_modules/.bin/node\" \"{{caxa}}/dist/index.js\"",
       "files": [
         "dist/index.js"
       ],
