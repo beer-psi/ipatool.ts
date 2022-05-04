@@ -1,7 +1,6 @@
 import { createWriteStream, readFileSync } from 'fs';
 import JSZip from 'jszip';
 import plist from 'plist';
-import { parse } from 'fast-plist';
 import { StoreItem } from '../store/response.js';
 
 export async function readZip(path: string): Promise<JSZip> {
@@ -62,7 +61,7 @@ export class SignatureClient {
     if (!manifestPath) {
       throw new Error('Invalid app bundle.');
     }
-    const manifest = parse((await this.archive.file(manifestPath)?.async('string')) ?? '<plist></plist>');
+    const manifest: any = plist.parse((await this.archive.file(manifestPath)?.async('string')) ?? '<plist></plist>');
     if (!manifest.SinfPaths[0]) {
       throw new Error('Invalid signature.');
     }

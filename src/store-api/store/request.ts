@@ -1,4 +1,3 @@
-import { parse } from 'fast-plist';
 import plist from 'plist';
 import getMAC from 'getmac';
 import fetchCookie from 'fetch-cookie';
@@ -44,7 +43,8 @@ export class StoreRequest {
         headers: this.commonHeaders,
       },
     );
-    const parsedResp = parse(await resp.text());
+    const parsedResp: any = plist.parse(await resp.text());
+
     if ((<StoreFailureResponse>parsedResp).failureType) {
       return Object.assign(parsedResp, {
         _state: 'failure',
@@ -80,7 +80,7 @@ export class StoreRequest {
         }),
       },
     );
-    const parsedResp = parse(await resp.text());
+    const parsedResp: any = plist.parse(await resp.text());
     if ((<StoreFailureResponse>parsedResp).failureType) {
       return Object.assign(parsedResp, {
         _state: 'failure',
@@ -131,7 +131,7 @@ export class StoreRequest {
     if (resp.status === 500) {
       throw new Error('The Apple ID already contains a license for this app.');
     }
-    const parsedResp = parse(await resp.text());
+    const parsedResp: any = plist.parse(await resp.text());
     if ((<StoreFailureResponse>parsedResp).failureType) {
       return Object.assign(parsedResp, {
         _state: 'failure',
