@@ -1,6 +1,6 @@
 {
   "name": "ipatool.ts",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A tool to download IPAs from the iOS App Store",
   "main": "dist/index.js",
   "bin": {
@@ -8,12 +8,13 @@
   },
   "type": "module",
   "scripts": {
-    "build": "wireit",
+    "build:lib": "wireit",
     "build:bundle": "wireit",
+    "build:exe": "wireit",
     "lint": "wireit"
   },
   "wireit": {
-    "build": {
+    "build:lib": {
       "command": "tsc --build --pretty",
       "clean": "if-file-deleted",
       "files": [
@@ -23,13 +24,10 @@
       "output": [
         "lib/**",
         ".tsbuildinfo"
-      ],
-      "packageLocks": [
-        "package-lock.json"
       ]
     },
     "build:bundle": {
-      "command": "tsup",
+      "command": "esbuild src/cli/index.ts --bundle --outfile=dist/index.temp.js --platform=node --external:keytar --format=esm && node ./scripts/importify-esbuild-output.cjs ./dist/index.temp.js | esbuild --bundle --outdir=dist/ --platform=node --external:keytar --format=esm --minify --sourcemap && mv dist/stdin.js dist/index.js && mv dist/stdin.js.map dist/index.js.map && rm dist/index.temp.js",
       "files": [
         "src/**/*.ts",
         "tsconfig.json",
@@ -37,31 +35,28 @@
       ],
       "output:": [
         "dist/**"
-      ],
-      "packageLocks": [
-        "package-lock.json"
       ]
     },
     "lint": {
-      "command": "eslint --fix src/**",
+      "command": "eslint --color --cache --cache-location .eslintcache --fix src/**",
       "files": [
         "src/**/*.ts",
         ".eslintrc.yml"
       ],
       "output": []
+    },
+    "build:exe": {
+      "dependencies": [
+        "build:bundle"
+      ],
+      "command": "caxa -i . -m \"This may take a while to run the first time, please wait...\" --exclude \"*\" \".*\" \"!dist\" -o bin/ipatool.exe -p \"npm install keytar && mv dist/index.js dist/index.mjs && mv dist/index.js.map dist/index.mjs.map\" -- \"{{caxa}}/node_modules/.bin/node\" \"{{caxa}}/dist/index.mjs\"",
+      "files": [
+        "dist/index.js"
+      ],
+      "output": [
+        "bin/ipatool.exe"
+      ]
     }
-  },
-  "tsup": {
-    "entry": [
-      "src/cli/index.ts"
-    ],
-    "clean": true,
-    "splitting": false,
-    "sourcemap": true,
-    "format": [
-      "esm"
-    ],
-    "minify": true
   },
   "files": [
     "dist/**/*"
@@ -72,10 +67,10 @@
     "@types/cli-progress": "^3.9.2",
     "@types/plist": "^3.0.2",
     "@types/yargs": "^17.0.10",
+    "caxa": "^2.1.0",
     "eslint": "^8.14.0",
     "eslint-config-airbnb-typescript": "^17.0.0",
     "eslint-plugin-import": "^2.26.0",
-    "tsup": "^5.12.6",
     "typescript": "^4.6.4",
     "wireit": "^0.3.1"
   },
@@ -83,7 +78,6 @@
     "chalk": "^4.1.2",
     "cli-progress": "^3.11.0",
     "cli-table3": "^0.6.2",
-    "fast-plist": "^0.1.2",
     "fetch-cookie": "^2.0.3",
     "filesize": "^8.0.7",
     "getmac": "^5.20.0",
