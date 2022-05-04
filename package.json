@@ -1,10 +1,10 @@
 {
   "name": "ipatool.ts",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A tool to download IPAs from the iOS App Store",
-  "main": "lib/cli/index.js",
+  "main": "dist/index.js",
   "bin": {
-    "ipatool": "lib/cli/index.js"
+    "ipatool": "dist/index.js"
   },
   "type": "module",
   "scripts": {
