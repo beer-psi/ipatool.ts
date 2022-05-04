@@ -3,6 +3,8 @@ import { StoreRequest } from './request.js';
 import { StoreAuthResponse, StoreErrors, StoreItem, StorePurchaseResponse } from './response.js';
 
 export class StoreClient {
+  static storeReq = StoreRequest;
+
   /**
    * Signs a user into iTunes.
    * @param email Apple ID email

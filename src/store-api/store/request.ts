@@ -7,9 +7,11 @@ import { Storefront } from '../common/storefront.js';
 import { StoreEndpoint } from './endpoint.js';
 import { StoreFailureResponse, StoreAuthResponse, StoreDownloadResponse, StoreErrors, StorePurchaseResponse } from './response.js';
 
-const fetch = fetchCookie(nodeFetch);
-
 export class StoreRequest {
+  public static cookieJar = new fetchCookie.toughCookie.CookieJar();
+
+  static fetch = fetchCookie(nodeFetch, this.cookieJar);
+
   static commonHeaders = {
     'User-Agent':
       'Configurator/2.15 (Macintosh; OS X 11.0.0; 16G29) AppleWebKit/2603.3.8',
@@ -34,7 +36,7 @@ export class StoreRequest {
       rmp: 0,
       why: 'signIn',
     });
-    const resp = await fetch(
+    const resp = await this.fetch(
       StoreEndpoint.authenticate(mfa ? 'p71' : 'p25', this.guid),
       {
         method: 'POST',
@@ -67,7 +69,7 @@ export class StoreRequest {
       guid: this.guid,
       salableAdamId: appIdentifier,
     });
-    const resp = await fetch(
+    const resp = await this.fetch(
       StoreEndpoint.download(this.guid),
       {
         method: 'POST',
@@ -112,7 +114,7 @@ export class StoreRequest {
       salableAdamId: appIdentifier,
       guid: this.guid,
     });
-    const resp = await fetch(
+    const resp = await this.fetch(
       StoreEndpoint.purchase,
       {
         method: 'POST',

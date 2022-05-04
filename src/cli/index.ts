@@ -1,12 +1,92 @@
 #!/usr/bin/env node
+import { exit } from 'process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { Storefront } from '../store-api/common/storefront.js';
 import { DeviceFamily } from '../store-api/common/device-family.js';
 import search from './search.js';
 import download from './download.js';
+import * as auth from './auth.js';
+import { Logger } from './logger.js';
 
 yargs(hideBin(process.argv))
+  .option('log-level', {
+    description: 'Set the log level',
+    choices: ['error', 'warning', 'info', 'debug'],
+    default: 'info',
+    nargs: 1,
+  })
+  .command(
+    'auth',
+    'authenticate with the App Store',
+    (argv) => {
+      argv
+        .command(
+          'login',
+          'Login to the App Store',
+          (argw) => {
+            argw
+              .option('e', {
+                alias: ['email'],
+                description: 'Apple ID email address',
+                demandOption: process.env.IPATOOL_EMAIL === undefined,
+                type: 'string',
+                nargs: 1,
+                default: '',
+                coerce: (arg) => {
+                  if (!arg && process.env.IPATOOL_EMAIL) {
+                    return process.env.IPATOOL_EMAIL;
+                  } else { 
+                    return arg;
+                  }
+                },
+              })
+              .option('p', {
+                alias: ['password'],
+                description: 'Apple ID password',
+                demandOption: process.env.IPATOOL_PASSWORD === undefined,
+                type: 'string',
+                nargs: 1,
+                default: '',
+                coerce: (arg) => {
+                  if (!arg && process.env.IPATOOL_PASSWORD) {
+                    return process.env.IPATOOL_PASSWORD;
+                  } else { 
+                    return arg;
+                  }
+                },
+              })
+              .option('m', {
+                alias: ['2fa-code', 'mfa-code', 'auth-code'],
+                description: 'Apple ID 2FA code',
+                type: 'string',
+                nargs: 1,
+                default: '',
+                coerce: (arg) => {
+                  if (!arg && process.env.IPATOOL_2FA_CODE) {
+                    return process.env.IPATOOL_2FA_CODE;
+                  } else { 
+                    return arg;
+                  }
+                },
+              });
+          },
+          (args: any) => {
+            auth.login(args);
+          },
+        )
+        .command(
+          'revoke',
+          'Revoke saved credentials',
+          (_) => {},
+          (args: any) => {
+            auth.revoke(args);
+          },
+        )
+        .demandCommand()
+        .help();
+    },
+  )
   .command(
     'download',
     'Download encrypted iOS app packages from the App Store.',
@@ -25,50 +105,6 @@ yargs(hideBin(process.argv))
           conflicts: ['b'],
           type: 'string',
           nargs: 1,
-        })
-        .option('e', {
-          alias: ['email'],
-          description: 'Apple ID email address',
-          demandOption: process.env.IPATOOL_EMAIL === undefined,
-          type: 'string',
-          nargs: 1,
-          default: '',
-          coerce: (arg) => {
-            if (!arg && process.env.IPATOOL_EMAIL) {
-              return process.env.IPATOOL_EMAIL;
-            } else { 
-              return arg;
-            }
-          },
-        })
-        .option('p', {
-          alias: ['password'],
-          description: 'Apple ID password',
-          demandOption: process.env.IPATOOL_PASSWORD === undefined,
-          type: 'string',
-          nargs: 1,
-          default: '',
-          coerce: (arg) => {
-            if (!arg && process.env.IPATOOL_PASSWORD) {
-              return process.env.IPATOOL_PASSWORD;
-            } else { 
-              return arg;
-            }
-          },
-        })
-        .option('m', {
-          alias: ['2fa-code', 'mfa-code', 'auth-code'],
-          description: 'Apple ID 2FA code',
-          type: 'string',
-          nargs: 1,
-          default: '',
-          coerce: (arg) => {
-            if (!arg && process.env.IPATOOL_2FA_CODE) {
-              return process.env.IPATOOL_2FA_CODE;
-            } else { 
-              return arg;
-            }
-          },
         })
         .option('d', {
           alias: ['device-family'],
@@ -114,8 +150,10 @@ yargs(hideBin(process.argv))
           return true;
         });
     },
-    (args: any) => {
-      download(args);
+    async (args: any) => {
+      const logger = new Logger(args.logLevel);
+      logger.debug(JSON.stringify(args, null, 2));
+      exit(await download(args) ?? 0);
     },
   )
   .command(
@@ -164,9 +202,12 @@ yargs(hideBin(process.argv))
         });
     },
     (args: any) => {
-      return search(Object.assign(args, {
+      args = Object.assign(args, {
         term: args._.at(-1),
-      }));
+      });
+      const logger = new Logger(args.logLevel);
+      logger.debug(JSON.stringify(args, null, 2));
+      search(args);
     },
   )
   .epilogue('Apple ID information can be passed through flags, or through environment variables IPATOOL_EMAIL, IPATOOL_PASSWORD and IPATOOL_2FA_CODE.')

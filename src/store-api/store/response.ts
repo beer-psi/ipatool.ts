@@ -27,7 +27,13 @@ interface Jingle {
 
 export interface StoreAuthResponse extends StoreResponse, HasDSID {
   _state: 'success',
-  accountInfo: Account,
+  accountInfo: {
+    appleId: string,
+    address: {
+      firstName: string,
+      lastName: string,
+    }
+  },
   passwordToken: string,
 }
 
@@ -59,13 +65,5 @@ export interface StoreItem {
     softwareVersionBundleId: string,
     softwareVersionExternalIdentifier: string,
     softwareVersionExternalIdentifiers: string[],
-  }
-}
-
-export interface Account {
-  appleId: string,
-  address: {
-    firstName: string,
-    lastName: string,
   }
 }
