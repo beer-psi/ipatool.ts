@@ -27,11 +27,12 @@
       ]
     },
     "build:bundle": {
-      "command": "esbuild src/cli/index.ts --bundle --outfile=dist/index.temp.js --platform=node --external:keytar --format=esm && node ./scripts/importify-esbuild-output.cjs ./dist/index.temp.js | esbuild --bundle --outdir=dist/ --platform=node --external:keytar --format=esm --minify --sourcemap && mv dist/stdin.js dist/index.js && mv dist/stdin.js.map dist/index.js.map && rm dist/index.temp.js",
+      "command": "tsup",
       "files": [
         "src/**/*.ts",
         "tsconfig.json",
-        "package.json"
+        "package.json",
+        "esbuild.config.cjs"
       ],
       "output:": [
         "dist/**"
@@ -49,7 +50,7 @@
       "dependencies": [
         "build:bundle"
       ],
-      "command": "caxa -i . -m \"This may take a while to run the first time, please wait...\" --exclude \"*\" \".*\" \"!dist\" -o bin/ipatool.exe -p \"npm install keytar && mv dist/index.js dist/index.mjs && mv dist/index.js.map dist/index.mjs.map\" -- \"{{caxa}}/node_modules/.bin/node\" \"{{caxa}}/dist/index.mjs\"",
+      "command": "caxa -i . --exclude \"*\" \".*\" \"!dist\" \"!package.json\" \"!package-lock.json\" -p \"npm ci --production\" -m \"This may take a while to run the first time, please wait...\" -o bin/ipatool.exe -- \"{{caxa}}/node_modules/.bin/node\" \"{{caxa}}/dist/index.js\"",
       "files": [
         "dist/index.js"
       ],
@@ -57,6 +58,18 @@
         "bin/ipatool.exe"
       ]
     }
+  },
+  "tsup": {
+    "entry": [
+      "src/cli/index.ts"
+    ],
+    "clean": true,
+    "splitting": false,
+    "sourcemap": true,
+    "format": [
+      "esm"
+    ],
+    "minify": true
   },
   "files": [
     "dist/**/*"
@@ -71,6 +84,7 @@
     "eslint": "^8.14.0",
     "eslint-config-airbnb-typescript": "^17.0.0",
     "eslint-plugin-import": "^2.26.0",
+    "tsup": "^5.12.6",
     "typescript": "^4.6.4",
     "wireit": "^0.3.1"
   },
