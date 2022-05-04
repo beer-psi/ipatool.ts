@@ -2,7 +2,7 @@ import { createWriteStream } from 'fs';
 import { get } from 'https';
 import chalk from 'chalk';
 import fileSize from 'filesize';
-import { getPassword } from 'keytar';
+import keytar from 'keytar';
 import { SingleBar, Presets } from 'cli-progress';
 import { StoreClient } from '../store-api/store/client.js';
 import { SignatureClient } from '../store-api/signature/client.js';
@@ -88,7 +88,7 @@ async function downloadWithProgress(url: string, output: string): Promise<void> 
 }
 
 async function login(): Promise<Account | null> {
-  const rawUser = await getPassword('ipatool.ts.service', 'account');
+  const rawUser = await keytar.getPassword('ipatool.ts.service', 'account');
   if (!rawUser) {
     return null;
   }
