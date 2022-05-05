@@ -1,7 +1,7 @@
 import keytar from 'keytar';
-import { StoreClient } from '../store-api/store/client.js';
-import { StoreAuthResponse, StoreFailureResponse } from '../store-api/store/response.js';
-import { Logger } from './logger.js';
+import { StoreClient } from '../../store-api/store/client.js';
+import { StoreAuthResponse, StoreFailureResponse } from '../../store-api/store/response.js';
+import { Logger } from '../utils/logger.js';
 
 async function _login(email: string, password: string, mfa?: string): Promise<StoreAuthResponse | StoreFailureResponse> {
   try {

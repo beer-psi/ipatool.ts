@@ -2,42 +2,14 @@ import { createWriteStream } from 'fs';
 import { get } from 'https';
 import chalk from 'chalk';
 import fileSize from 'filesize';
-import keytar from 'keytar';
 import { SingleBar, Presets } from 'cli-progress';
-import { StoreClient } from '../store-api/store/client.js';
-import { SignatureClient } from '../store-api/signature/client.js';
-import { iTunesClient } from '../store-api/itunes/client.js';
-import { Storefront } from '../store-api/common/storefront.js';
-import { DeviceFamily } from '../store-api/common/device-family.js';
-import { StoreErrors, StoreItem } from '../store-api/store/response.js';
-import { Logger } from './logger.js';
-
-interface Account {
-  /**
-   * The name assigned with this Apple ID.
-   */
-  n: string;
-
-  /**
-   * The email associated with this Apple ID.
-   */
-  e: string;
-
-  /**
-   * The password token of this ID.
-   */
-  p: string;
-
-  /**
-   * Directory Services Identifier
-   */
-  d: string;
-
-  /**
-   * An array of Set-Cookie strings
-   */
-  c: string[];
-}
+import { StoreClient } from '../../store-api/store/client.js';
+import { SignatureClient } from '../../store-api/signature/client.js';
+import { Storefront } from '../../store-api/common/storefront.js';
+import { DeviceFamily } from '../../store-api/common/device-family.js';
+import { StoreErrors, StoreItem } from '../../store-api/store/response.js';
+import { Logger } from '../utils/logger.js';
+import { loginFromKeychain, Account, getTrackId } from '../utils/misc.js';
 
 async function downloadFile(url: string, output: string, updateCallback: (downloaded: number, fileSize: number) => any): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -87,28 +59,11 @@ async function downloadWithProgress(url: string, output: string): Promise<void> 
   bar.stop();
 }
 
-async function login(): Promise<Account | null> {
-  const rawUser = await keytar.getPassword('ipatool.ts.service', 'account');
-  if (!rawUser) {
-    return null;
-  }
-  return JSON.parse(rawUser);
-}
-
 async function sign(app: StoreItem, user: Account, file: string) {
   const sigClient = new SignatureClient(app, user.e);
   await sigClient.loadFile(file);
   await sigClient.appendMetadata().appendSignature();
   await sigClient.write();
-}
-
-async function getTrackId(country: keyof typeof Storefront, deviceFamily: DeviceFamily, bundleId?: string, trackId?: string) {
-  if (trackId) {
-    return trackId;
-  } else if (bundleId) {
-    const resp = await iTunesClient.lookup(bundleId, country, deviceFamily);
-    return resp?.trackId;
-  }
 }
 
 export default async function run({ 
@@ -129,7 +84,7 @@ export default async function run({
   const logger = new Logger(logLevel);
 
   logger.info('Logging in with provided information...');
-  const user = await login();
+  const user = await loginFromKeychain();
   if (!user) {
     logger.error('Authentication required. Run the "auth" subcommand.');
     return 1;

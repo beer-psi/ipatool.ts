@@ -72,11 +72,14 @@ export class StoreClient {
     passwordToken: string,
     countryCode: keyof typeof Storefront,
   ): Promise<StorePurchaseResponse> {
-    const resp = await StoreRequest.purchase(appIdentifier, directoryServicesIdentifier, passwordToken, countryCode);
-    if (resp._state === 'failure') {
-      throw resp;
-    } else {
+    try {
+      const resp = await StoreRequest.purchase(appIdentifier, directoryServicesIdentifier, passwordToken, countryCode);
+      if (resp._state === 'failure') { 
+        throw resp;
+      }
       return resp;
+    } catch (e: any) {
+      throw e;
     }
   }
 }

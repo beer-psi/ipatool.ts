@@ -10,6 +10,7 @@ export enum StoreErrors {
   INVALID_COUNTRY = '-128',
   PASSWORD_TOKEN_EXPIRED = '2034',
   PRICE_MISMATCH = '2019',
+  PASSWORD_CHANGED = '2002',
 }
 
 interface StoreResponse {

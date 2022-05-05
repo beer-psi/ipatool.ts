@@ -1,10 +1,10 @@
 import terminalLink from 'terminal-link';
 import Table from 'cli-table3';
-import { DeviceFamily } from '../store-api/common/device-family.js';
-import { Storefront } from '../store-api/common/storefront.js';
-import { iTunesClient } from '../store-api/itunes/client.js';
+import { DeviceFamily } from '../../store-api/common/device-family.js';
+import { Storefront } from '../../store-api/common/storefront.js';
+import { iTunesClient } from '../../store-api/itunes/client.js';
 
-export default async function search(
+export default async function run(
   { 
     term, 
     limit, 
