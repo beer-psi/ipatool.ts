@@ -1,6 +1,6 @@
 {
   "name": "ipatool.ts",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "A tool to download IPAs from the iOS App Store",
   "main": "dist/index.js",
   "bin": {
