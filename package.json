@@ -97,7 +97,7 @@
     "getmac": "^5.20.0",
     "jszip": "^3.9.1",
     "keytar": "^7.9.0",
-    "node-fetch": "^3.2.4",
+    "node-fetch": "^3.2.10",
     "plist": "^3.0.5",
     "terminal-link": "^3.0.0",
     "yargs": "^17.4.1"
